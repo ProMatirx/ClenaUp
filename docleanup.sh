@@ -44,8 +44,8 @@ else
         echo -e "\n\n====================== [Image ID with <none>]:No Docker Images to delete============\n\n"
 fi
 
-echo -e "======= Proceeding to next step, i.e deletion of old images which are two months old =============="
-oldImages=$($DOCKER images | $AWK '{print $3,$4,$5}' | $GREP '[5-9]\{1\}\ weeks\|years\|months' | $AWK '{print $1}')
+echo -e "======= Proceeding to next step, i.e deletion of old images which are one month old =============="
+oldImages=$($DOCKER images | $AWK '{print $3,$4,$5}' | $GREP '[5-9]\{1\} weeks\|months' | $AWK '{print $1}')
 #echo ${oldImages} >> cleanUpLog
 if [ "$oldImages" != "" ]; then
         for i in ${oldImages}
@@ -61,17 +61,17 @@ else
         echo -e "\n =================== No Docker Images to delete ================== \n"
 fi
 
-
+echo -e "======= Proceeding to next step, i.e deletion of oldContainers  which are [Dead|Exited]  =============="
 oldContainers=$($DOCKER ps -a | $GREP "Dead\|Exited" | $AWK '{print $1}')
 if [ "$oldContainers" != "" ]; then
-  echo ""
+
         for oContainers in $oldContainers
         do
           echo $j
           $DOCKER logs ${oContainers} >> containerlogs
           $DOCKER rm ${oContainers} >> cleanUpLog
           if [ $# -eq 0 ]; then
-                        echo -n "\n========[Dead|Exited] Docker container with ContainerID: ${oContainers} Deleted Successfully======= \n" >> cleanUpLog
+                        echo -n "\n========[Dead|Exited] Docker container with ContaineriID: ${oContainers} Deleted Successfully======= \n" >> cleanUpLog
                 else
                         echo -n "\n=======[Dead|Exited] Error while deleting Docker image with COntainedID: ${oContainers}=======\n" >> cleanUpLog
                 fi
