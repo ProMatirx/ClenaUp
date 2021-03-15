@@ -1,0 +1,78 @@
+#!/bin/sh -x
+result="which docker"
+if [ -z "$result" ]; then
+        echo "Error: DOCKER command seems not to be present in this OS."
+        echo "System defaults are missing.Sorry, Quitting from installation"
+        echo "Thank You"
+        exit 1
+else
+   DOCKER="$result"
+   echo "$DOCKER"
+fi
+result="which awk"
+if [ -z "$result" ]; then
+        echo "Error: AWK command seems not to be present in this OS."
+        echo "System defaults are missing.Sorry, Quitting from installation"
+        echo "Thank You"
+        exit 1
+else
+   AWK="$result"
+   echo "$AWK"
+fi
+result="which grep"
+if [ -z "$result" ]; then
+        echo "Error: grep command seems not to be present in this OS."
+        echo "System defaults are missing.Sorry, Quitting from installation"
+        echo "Thank You"
+        exit 1
+else
+   GREP="$result"
+   echo "$GREP"
+fi
+printf "\n\n =========== Starting the Docker Clean Up Script ================== \n\n"
+
+printf "\n\n ======= Checking Docker Containers Dead\|Exited ====== \n\n"
+
+
+oldContainers=$(docker ps -a | grep "Dead\|Exited" | awk '{print $1}')
+echo "$oldContainers";
+if [ "$oldContainers" != "" ]; then
+
+        for oContainers in $oldContainers
+        do
+        echo "$oContainers";
+
+           #printf "%s $("{$DOCKER}" logs "{$oContainers}" )" 2>&1 | tee -a /tmp/containerlogs.txt
+           docker logs "${oContainers}" 2>&1 | tee -a /tmp/containerlogs.txt
+           docker rm "${oContainers}" >> cleanUpLog
+          if [ $# -eq 0 ]; then
+                       printf  "%s\n ========[Dead|Exited] Docker container with ContainerID: ${oContainers} Deleted Successfully ======= \n"
+                else
+                       printf "%s\n =======[Dead|Exited] Error while deleting Docker image with COntainedID: ${oContainers} =======\n"
+                fi
+
+        done
+else
+        printf "\n ======= There no Docker containers with status as 'Exited' ====== \n"
+fi
+
+printf "\n\n ======= Checking DockerImages which are older than month ====== \n\n"
+oldImages=$(docker images | grep "[5-9]\{1\}\ weeks\|years\|months" | awk '{print $3,$4,$5}' |awk '{print $1}')
+echo "${oldImages}"
+
+if [ "$oldImages" != "" ]; then
+        for i in ${oldImages}
+        do
+        echo "$i"
+                docker rmi -f "${i}" >> cleanUpLog
+                #"${DOCKER}" image prune --all -f >> cleanUpLog
+
+                if [ $# -eq 0 ]; then
+                        printf "%s\n\n ======= Docker image with ImageId: ${i} Delted Successfully =======\n\n"
+                else
+                        printf "%s\n\n ======= Error while deleting Docker image with ImageId: ${i} ======= \n\n"
+                fi
+        done
+else
+        printf "\n\n =================== No Docker Images to delete ================== \n\n"
+fi
